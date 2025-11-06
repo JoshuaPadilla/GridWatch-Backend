@@ -5,6 +5,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { Mongoose } from 'mongoose';
 import { MongooseModule } from '@nestjs/mongoose';
 import { SensorModule } from './endpoints/sensor/sensor.module';
+import { HistoryModule } from './endpoints/history/history.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { SensorModule } from './endpoints/sensor/sensor.module';
       inject: [ConfigService],
     }),
     SensorModule,
+    HistoryModule,
   ],
   controllers: [AppController],
   providers: [AppService],

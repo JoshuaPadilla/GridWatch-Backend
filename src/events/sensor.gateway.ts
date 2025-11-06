@@ -26,22 +26,23 @@ export class SensorGateway
 
   //   handle join
   @SubscribeMessage('connectDevice')
-  handleJoinSubject(
+  handleJoinRoom(
     @ConnectedSocket() client: Socket,
-    @MessageBody() data: { sensorId: string },
+    @MessageBody() data: { deviceId: string },
   ) {
-    client.join(data.sensorId);
-    console.log(`Client ${client.id} joined subject room ${data.sensorId}`);
+    console.log(data);
+    client.join(data.deviceId);
+    console.log(`Client ${client.id} joined subject room ${data.deviceId}`);
   }
 
   //   handle leave
   @SubscribeMessage('disconnectDevice')
   handleLeaveRoom(
-    @MessageBody() data: { sensorId: string },
+    @MessageBody() data: { deviceId: string },
     @ConnectedSocket() client: Socket,
   ) {
-    client.leave(data.sensorId);
-    client.emit('leftRoom', `You have left ${data.sensorId}`);
+    client.leave(data.deviceId);
+    client.emit('leftRoom', `You have left ${data.deviceId}`);
   }
 
   //   emit message to specific device

@@ -6,24 +6,22 @@ import {
   IsString,
 } from 'class-validator';
 
-export class CreateSensorPayloadDto {
+export class CreateHistoryDto {
   @IsString()
   deviceId: string;
 
   @IsString()
-  voltage: string;
-
-  @IsString()
-  current: string;
-
-  @IsString()
-  temperature: string;
-
-  @IsString()
-  @IsOptional()
-  location: string;
-
-  @IsString()
-  @IsOptional()
   time: string;
+
+  @IsString()
+  date: string;
+
+  @IsString()
+  title: string;
+
+  @IsString()
+  body: string;
+
+  @IsString()
+  status: string;
 }
