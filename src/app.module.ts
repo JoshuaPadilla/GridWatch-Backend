@@ -6,6 +6,7 @@ import { Mongoose } from 'mongoose';
 import { MongooseModule } from '@nestjs/mongoose';
 import { SensorModule } from './endpoints/sensor/sensor.module';
 import { HistoryModule } from './endpoints/history/history.module';
+import { DeviceModule } from './endpoints/device/device.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { HistoryModule } from './endpoints/history/history.module';
     }),
     SensorModule,
     HistoryModule,
+    DeviceModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { HistoryService } from './history.service';
 import { CreateHistoryDto } from './dto/create-history.dto';
 
@@ -9,5 +9,10 @@ export class HistoryController {
   @Post()
   async create(@Body() createHistoryDto: CreateHistoryDto) {
     return await this.historyService.create(createHistoryDto);
+  }
+
+  @Get(':deviceId')
+  async getHistoryByDevice(@Param('deviceId') deviceId: string) {
+    return this.historyService.getHistoryByDevice(deviceId);
   }
 }

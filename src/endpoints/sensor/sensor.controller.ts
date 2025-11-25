@@ -13,4 +13,9 @@ export class SensorController {
 
     return newPayload;
   }
+
+  // @Post()
+  // async sendLocation(@Body() location: any) {
+  //   console.log(location);
+  // }
 }

@@ -30,7 +30,6 @@ export class SensorGateway
     @ConnectedSocket() client: Socket,
     @MessageBody() data: { deviceId: string },
   ) {
-    console.log(data);
     client.join(data.deviceId);
     console.log(`Client ${client.id} joined subject room ${data.deviceId}`);
   }
@@ -47,7 +46,9 @@ export class SensorGateway
 
   //   emit message to specific device
   sendPayload(deviceId: string, payload: any) {
-    this.server.to(deviceId).emit('sensorPayload', payload);
+    const { deviceId: sensorId, ...rest } = payload;
+
+    this.server.to(deviceId).emit('sensorPayload', rest);
   }
 
   // --- Lifecycle Hooks ---
