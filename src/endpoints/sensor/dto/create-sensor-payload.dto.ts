@@ -5,6 +5,7 @@ import {
   IsOptional,
   IsString,
 } from 'class-validator';
+import { LocationCoordinates } from 'src/interfaces/location_coor.interface';
 
 export class CreateSensorPayloadDto {
   @IsString()
@@ -21,7 +22,7 @@ export class CreateSensorPayloadDto {
 
   @IsString()
   @IsOptional()
-  location: string;
+  location: LocationCoordinates;
 
   @IsString()
   @IsOptional()
