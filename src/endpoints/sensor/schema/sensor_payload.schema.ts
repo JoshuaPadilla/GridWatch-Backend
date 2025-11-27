@@ -22,10 +22,8 @@ export class SensorPayload extends Document {
       lng: { type: String, required: true },
     },
   })
-  location?: LocationCoordinates;
-
-  @Prop()
-  time: string;
+  locationCoordinates?: LocationCoordinates;
 }
 
 export const SensorPayloadSchema = SchemaFactory.createForClass(SensorPayload);
+SensorPayloadSchema.set('timestamps', true);

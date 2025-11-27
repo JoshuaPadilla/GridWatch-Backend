@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Post } from '@nestjs/common';
 import { DeviceService } from './device.service';
 import { CreateDeviceDto } from './dto/create_device.dto';
 
@@ -14,5 +14,10 @@ export class DeviceController {
   @Get()
   findAll() {
     return this.deviceService.findAll();
+  }
+
+  @Delete()
+  deleteAll() {
+    this.deviceService.deleteAll();
   }
 }

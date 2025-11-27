@@ -22,7 +22,7 @@ export class CreateSensorPayloadDto {
 
   @IsString()
   @IsOptional()
-  location: LocationCoordinates;
+  locationCoordinates: LocationCoordinates;
 
   @IsString()
   @IsOptional()

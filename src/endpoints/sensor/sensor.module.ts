@@ -7,11 +7,15 @@ import {
   SensorPayloadSchema,
 } from './schema/sensor_payload.schema';
 import { SensorGateway } from 'src/events/sensor.gateway';
+import { Device, DeviceSchema } from '../device/schema/device.schema';
+import { LocationModule } from '../location/location.module';
 
 @Module({
   imports: [
+    LocationModule,
     MongooseModule.forFeature([
       { name: SensorPayload.name, schema: SensorPayloadSchema },
+      { name: Device.name, schema: DeviceSchema },
     ]),
   ],
   controllers: [SensorController],
