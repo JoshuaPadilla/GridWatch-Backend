@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
 import { SensorService } from './sensor.service';
 import { SensorPayload } from './schema/sensor_payload.schema';
 import { CreateSensorPayloadDto } from './dto/create-sensor-payload.dto';
@@ -21,10 +21,15 @@ export class SensorController {
     return newPayload;
   }
 
-  // @Post()
-  // async sendLocation(@Body() location: any) {
-  //   console.log(location);
-  // }
+  @Get()
+  async getAll() {
+    return this.sensorService.getAll();
+  }
+
+  @Get(':deviceId')
+  async getLast20DevicePayloads(@Param('deviceId') deviceId: string) {
+    return this.sensorService.getLast20DevicePayloads(deviceId);
+  }
 
   @Delete()
   deleteAll() {

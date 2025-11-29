@@ -35,24 +35,51 @@ export class SensorService {
           locationName: location_name,
         },
       );
-
-      const newPayload = new this.sensorPayloadModel(payloadDto);
-
-      this.sensorGateway.sendPayload(payloadDto.deviceId, payloadDto);
-
-      return newPayload.save();
-    } else {
-      throw new NotFoundException();
     }
+
+    const newPayload = new this.sensorPayloadModel(payloadDto);
+
+    this.sensorGateway.sendPayload(payloadDto.deviceId, payloadDto);
+
+    return newPayload.save();
   }
 
-  async isNew(deviceId: string): Promise<Boolean> {
+  private async isNew(deviceId: string): Promise<Boolean> {
     const device = await this.DeviceModel.findOne({ deviceId });
     if (device) {
       if (!device.locationCoordinates) return true;
+    } else {
+      throw new NotFoundException();
     }
 
     return false;
+  }
+
+  async getAll() {
+    return this.sensorPayloadModel.find();
+  }
+
+  async getLast20DevicePayloads(deviceId: string) {
+    const results = await this.sensorPayloadModel
+      .find({ deviceId })
+      .sort({ createdAt: -1 })
+      .limit(20)
+      .lean() // <--- ADD THIS
+      .exec();
+
+    const convertedResults = results.map((item) => {
+      // TypeScript now knows 'item' is just a plain object
+      const date = new Date(item.createdAt);
+      const minutes = date.getMinutes().toString().padStart(2, '0');
+      const seconds = date.getSeconds().toString().padStart(2, '0');
+
+      return {
+        ...item,
+        createdAt: `${minutes}:${seconds}`,
+      };
+    });
+
+    return convertedResults;
   }
 
   async deleteAll() {
