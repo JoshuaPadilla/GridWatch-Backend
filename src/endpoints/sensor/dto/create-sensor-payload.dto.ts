@@ -27,4 +27,8 @@ export class CreateSensorPayloadDto {
   @IsString()
   @IsOptional()
   time: string;
+
+  @IsString()
+  @IsOptional()
+  localCreatedAt: string;
 }

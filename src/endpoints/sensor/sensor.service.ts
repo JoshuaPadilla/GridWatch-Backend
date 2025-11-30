@@ -39,9 +39,21 @@ export class SensorService {
 
     const newPayload = new this.sensorPayloadModel(payloadDto);
 
-    this.sensorGateway.sendPayload(payloadDto.deviceId, payloadDto);
+    const saved = await newPayload.save();
 
-    return newPayload.save();
+    const cleanPayload = saved.toJSON();
+    this.sensorGateway.sendPayload(payloadDto.deviceId, cleanPayload);
+
+    return saved;
+
+    // const date = new Date(saved.createdAt);
+    // const minutes = date.getMinutes().toString().padStart(2, '0');
+    // const seconds = date.getSeconds().toString().padStart(2, '0');
+
+    // return {
+    //   ...saved.toObject(),
+    //   createdAt: `${minutes}:${seconds}`,
+    // } as unknown as SensorPayload;
   }
 
   private async isNew(deviceId: string): Promise<Boolean> {
@@ -64,22 +76,30 @@ export class SensorService {
       .find({ deviceId })
       .sort({ createdAt: -1 })
       .limit(20)
-      .lean() // <--- ADD THIS
       .exec();
 
-    const convertedResults = results.map((item) => {
-      // TypeScript now knows 'item' is just a plain object
-      const date = new Date(item.createdAt);
-      const minutes = date.getMinutes().toString().padStart(2, '0');
-      const seconds = date.getSeconds().toString().padStart(2, '0');
+    // const convertedResults = results.map((item) => {
+    //   // TypeScript now knows 'item' is just a plain object
+    //   const date = new Date(item.createdAt);
+    //   const minutes = date.getMinutes().toString().padStart(2, '0');
+    //   const seconds = date.getSeconds().toString().padStart(2, '0');
 
-      return {
-        ...item,
-        createdAt: `${minutes}:${seconds}`,
-      };
-    });
+    //   console.log('Original createdAt:', item.createdAt);
 
-    return convertedResults;
+    //   return {
+    //     ...item,
+    //     createdAt: `${minutes}:${seconds}`,
+    //   };
+    // });
+
+    return results;
+  }
+
+  async getLatestPayload(deviceId: string) {
+    return this.sensorPayloadModel
+      .findOne({ deviceId })
+      .sort({ createdAt: -1 })
+      .exec();
   }
 
   async deleteAll() {

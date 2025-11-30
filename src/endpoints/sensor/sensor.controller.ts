@@ -31,6 +31,11 @@ export class SensorController {
     return this.sensorService.getLast20DevicePayloads(deviceId);
   }
 
+  @Get('latest/:deviceId')
+  async getLatestPayload(@Param('deviceId') deviceId: string) {
+    return this.sensorService.getLatestPayload(deviceId);
+  }
+
   @Delete()
   deleteAll() {
     this.sensorService.deleteAll();

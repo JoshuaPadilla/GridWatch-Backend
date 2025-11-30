@@ -10,7 +10,7 @@ export class SensorPayload extends Document {
   @Prop()
   voltage: number;
 
-  @Prop()
+  @Prop({})
   createdAt: string;
 
   @Prop()
@@ -26,7 +26,23 @@ export class SensorPayload extends Document {
     },
   })
   locationCoordinates?: LocationCoordinates;
+
+  localCreatedAt?: string;
 }
 
 export const SensorPayloadSchema = SchemaFactory.createForClass(SensorPayload);
 SensorPayloadSchema.set('timestamps', true);
+
+SensorPayloadSchema.virtual('localCreatedAt').get(function () {
+  return this.createdAt
+    ? new Date(this.createdAt).toLocaleString('en-US', {
+        timeZone: 'Asia/Manila',
+        minute: '2-digit',
+        second: '2-digit',
+      })
+    : '';
+});
+
+// Ensure virtuals are included when you convert to JSON
+SensorPayloadSchema.set('toJSON', { virtuals: true });
+SensorPayloadSchema.set('toObject', { virtuals: true });

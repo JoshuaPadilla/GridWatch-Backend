@@ -31,7 +31,7 @@ export class SensorGateway
     @MessageBody() data: { deviceId: string },
   ) {
     client.join(data.deviceId);
-    console.log(`Client ${client.id} joined subject room ${data.deviceId}`);
+    console.log(`Client ${client.id} joined room ${data.deviceId}`);
   }
 
   //   handle leave
@@ -42,6 +42,8 @@ export class SensorGateway
   ) {
     client.leave(data.deviceId);
     client.emit('leftRoom', `You have left ${data.deviceId}`);
+
+    console.log(`Client ${client.id} left room ${data.deviceId}`);
   }
 
   //   emit message to specific device
