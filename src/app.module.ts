@@ -7,6 +7,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { SensorModule } from './endpoints/sensor/sensor.module';
 import { HistoryModule } from './endpoints/history/history.module';
 import { DeviceModule } from './endpoints/device/device.module';
+import { NotificationModule } from './endpoints/notification/notification.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { DeviceModule } from './endpoints/device/device.module';
     SensorModule,
     HistoryModule,
     DeviceModule,
+    NotificationModule,
   ],
   controllers: [AppController],
   providers: [AppService],

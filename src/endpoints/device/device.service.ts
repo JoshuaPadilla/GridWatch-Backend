@@ -37,6 +37,10 @@ export class DeviceService {
     return devices;
   }
 
+  async findOne(deviceId: string) {
+    return await this.DeviceModel.findOne({ deviceId });
+  }
+
   async deleteAll() {
     await this.DeviceModel.deleteMany();
   }

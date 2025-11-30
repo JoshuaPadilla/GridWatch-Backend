@@ -1,6 +1,7 @@
 import {
   IsNotEmpty,
   IsNotEmptyObject,
+  IsNumber,
   IsObject,
   IsOptional,
   IsString,
@@ -11,14 +12,14 @@ export class CreateSensorPayloadDto {
   @IsString()
   deviceId: string;
 
-  @IsString()
-  voltage: string;
+  @IsNumber()
+  voltage: number;
+
+  @IsNumber()
+  current: number;
 
   @IsString()
-  current: string;
-
-  @IsString()
-  temperature: string;
+  temperature: number;
 
   @IsString()
   @IsOptional()

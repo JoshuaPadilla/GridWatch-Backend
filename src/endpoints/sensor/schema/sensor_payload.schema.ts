@@ -14,10 +14,10 @@ export class SensorPayload extends Document {
   createdAt: string;
 
   @Prop()
-  current: string;
+  current: number;
 
   @Prop()
-  temperature: string;
+  temperature: number;
 
   @Prop({
     type: {
