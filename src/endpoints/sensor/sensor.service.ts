@@ -6,6 +6,8 @@ import { CreateSensorPayloadDto } from './dto/create-sensor-payload.dto';
 import { SensorGateway } from 'src/events/sensor.gateway';
 import { Device } from '../device/schema/device.schema';
 import { LocationService } from '../location/location.service';
+import { NotificationService } from '../notification/notification.service';
+import { EventsGateway } from 'src/events/events.gateway';
 
 @Injectable()
 export class SensorService {
@@ -14,9 +16,35 @@ export class SensorService {
     private DeviceModel: Model<Device>,
     @InjectModel(SensorPayload.name)
     private sensorPayloadModel: Model<SensorPayload>,
-    private readonly sensorGateway: SensorGateway,
+    private readonly eventsGateway: EventsGateway,
     private readonly locationService: LocationService,
   ) {}
+
+  // async create(deviceId: string) {
+  //   const device = await this.DeviceModel.findOne({ deviceId });
+
+  //   let voltage = Math.floor(Math.random() * (250 - 150 + 1)) + 150;
+
+  //   let current = Math.floor(Math.random() * (50 - 20 + 1)) + 20;
+
+  //   let temperature = Math.floor(Math.random() * (40 - 20 + 1)) + 20;
+
+  //   const payload = {
+  //     voltage,
+  //     current,
+  //     temperature,
+  //     deviceId,
+  //   } as SensorPayload;
+
+  //   if (device) {
+  //     const newPayload = new this.sensorPayloadModel(payload);
+
+  //     const saved = await newPayload.save();
+
+  //     const cleanPayload = saved.toJSON();
+  //     this.eventsGateway.sendPayloadToDevice(payload.deviceId, cleanPayload);
+  //   }
+  // }
 
   async create(
     payloadDto: CreateSensorPayloadDto,
@@ -42,7 +70,7 @@ export class SensorService {
     const saved = await newPayload.save();
 
     const cleanPayload = saved.toJSON();
-    this.sensorGateway.sendPayload(payloadDto.deviceId, cleanPayload);
+    this.eventsGateway.sendPayloadToDevice(payloadDto.deviceId, cleanPayload);
 
     return saved;
 

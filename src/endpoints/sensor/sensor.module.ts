@@ -9,9 +9,12 @@ import {
 import { SensorGateway } from 'src/events/sensor.gateway';
 import { Device, DeviceSchema } from '../device/schema/device.schema';
 import { LocationModule } from '../location/location.module';
+import { NotificationModule } from '../notification/notification.module';
+import { EventsGateway } from 'src/events/events.gateway';
 
 @Module({
   imports: [
+    NotificationModule,
     LocationModule,
     MongooseModule.forFeature([
       { name: SensorPayload.name, schema: SensorPayloadSchema },
@@ -19,6 +22,6 @@ import { LocationModule } from '../location/location.module';
     ]),
   ],
   controllers: [SensorController],
-  providers: [SensorService, SensorGateway],
+  providers: [SensorService, EventsGateway],
 })
 export class SensorModule {}

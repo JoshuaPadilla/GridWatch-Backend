@@ -14,10 +14,15 @@ export class SensorController {
     private DeviceModel: Model<Device>,
   ) {}
 
+  // @Post()
+  // async create(@Body() body: { deviceId: string }) {
+  //   console.log(body);
+  //   await this.sensorService.create(body.deviceId);
+  // }
+
   @Post()
   async create(@Body() sensorPayload: CreateSensorPayloadDto) {
     const newPayload = await this.sensorService.create(sensorPayload);
-
     return newPayload;
   }
 
