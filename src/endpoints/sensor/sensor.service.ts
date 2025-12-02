@@ -167,6 +167,12 @@ export class SensorService {
       this.eventsGateway.sendNotificationToDevice(deviceId, notification);
 
       this.notificationService.create(notification);
+    } else if (voltage <= WARNING_VOLTAGE_LOWER_LIMIT) {
+      notification = getWarningVoltageNotif(device, voltage);
+
+      this.eventsGateway.sendNotificationToDevice(deviceId, notification);
+
+      this.notificationService.create(notification);
     }
 
     if (current >= CRITICAL_CURRENT_UPPER_LIMIT) {
@@ -175,17 +181,7 @@ export class SensorService {
       this.eventsGateway.sendNotificationToDevice(deviceId, notification);
 
       this.notificationService.create(notification);
-    }
-
-    if (voltage <= WARNING_VOLTAGE_LOWER_LIMIT) {
-      notification = getWarningVoltageNotif(device, current);
-
-      this.eventsGateway.sendNotificationToDevice(deviceId, notification);
-
-      this.notificationService.create(notification);
-    }
-
-    if (current <= WARNING_CURRENT_UPPER_LIMIT) {
+    } else if (current >= WARNING_CURRENT_UPPER_LIMIT) {
       notification = getWarningCurrentNotfi(device, current);
 
       this.eventsGateway.sendNotificationToDevice(deviceId, notification);

@@ -18,6 +18,11 @@ export class NotificationService {
   }
 
   async getNotifByDeviceId(deviceId: string) {
+    console.log('gett');
     return await this.NotificationModel.find({ deviceId });
+  }
+
+  async deleteAll() {
+    await this.NotificationModel.deleteMany();
   }
 }

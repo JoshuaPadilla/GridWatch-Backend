@@ -21,7 +21,7 @@ export const getCriticalVoltageNotif = (
   return {
     deviceId: device.deviceId,
     title: 'Extremely Low Voltage Alert',
-    body: `Critical: Voltage (${voltage}V) level is extremely low (<= ${CRITICAL_VOLTAGE_LOWER_LIMIT}V). It is possible to experience power interruption in ${device.locationName}.`,
+    body: `Critical: Voltage (${voltage}V) level is extremely low (<= ${CRITICAL_VOLTAGE_LOWER_LIMIT}V). It is possible to experience power interruption in ${device.locationName.road}, ${device.locationName.brgy}.`,
     status: NOTIFICATION_STATUS.CRITICAL,
   };
 };
@@ -33,7 +33,7 @@ export const getWarningVoltageNotif = (
   return {
     deviceId: device.deviceId,
     title: 'Low Voltage Alert',
-    body: `Warning: Voltage (${voltage}V) level is significantly low (<= ${WARNING_VOLTAGE_LOWER_LIMIT}V). High risk of power instability/sag in ${device.locationName}.`,
+    body: `Warning: Voltage (${voltage}V) level is significantly low (<= ${WARNING_VOLTAGE_LOWER_LIMIT}V). High risk of power instability/sag in ${device.locationName.road}, ${device.locationName.brgy}.`,
     status: NOTIFICATION_STATUS.WARNING,
   };
 };
@@ -45,7 +45,7 @@ export const getWarningCurrentNotfi = (
   return {
     deviceId: device.deviceId,
     title: 'High Current Alert',
-    body: `Warning: Current (${current}A) is high (>= ${WARNING_CURRENT_UPPER_LIMIT}A). Monitor for potential overload stress. On grid located on ${device.locationName}.`,
+    body: `Warning: Current (${current}A) is high (>= ${WARNING_CURRENT_UPPER_LIMIT}A). Monitor for potential overload stress. On grid located on ${device.locationName.road}, ${device.locationName.brgy}.`,
     status: NOTIFICATION_STATUS.WARNING,
   };
 };
@@ -57,7 +57,7 @@ export const getCriticalCurrentNotif = (
   return {
     deviceId: device.deviceId,
     title: 'High Current Alert',
-    body: `Warning: Current (${current}A) is dangerously high (>= ${CRITICAL_CURRENT_UPPER_LIMIT}A). Potential device overload leading to blackout on grid located on ${device.locationName}.`,
+    body: `Warning: Current (${current}A) is dangerously high (>= ${CRITICAL_CURRENT_UPPER_LIMIT}A). Potential device overload leading to blackout on grid located on ${device.locationName.road}, ${device.locationName.brgy}.`,
     status: NOTIFICATION_STATUS.WARNING,
   };
 };

@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
 import { NotificationService } from './notification.service';
 import { CreateNotificationDto } from './dto/create-notification.dto';
 
@@ -14,5 +14,10 @@ export class NotificationController {
   @Get(':deviceId')
   async getNotifByDeviceId(@Param('deviceId') deviceId: string) {
     return this.notificationService.getNotifByDeviceId(deviceId);
+  }
+
+  @Delete()
+  deleteAll() {
+    this.notificationService.deleteAll();
   }
 }
