@@ -16,4 +16,8 @@ export class NotificationService {
 
     return await newNotification.save();
   }
+
+  async getNotifByDeviceId(deviceId: string) {
+    return await this.NotificationModel.find({ deviceId });
+  }
 }

@@ -10,6 +10,7 @@ import {
 } from '@nestjs/websockets';
 import { Logger } from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
+import { CreateNotificationDto } from 'src/endpoints/notification/dto/create-notification.dto';
 
 @WebSocketGateway({
   cors: {
@@ -73,6 +74,16 @@ export class EventsGateway
     if (this.server) {
       this.server.to(deviceId).emit('sensorPayload', rest);
       this.logger.log(`Payload sent to device room: ${deviceId}`);
+    }
+  }
+
+  sendNotificationToDevice(
+    deviceId: string,
+    notification: CreateNotificationDto,
+  ) {
+    if (this.server) {
+      this.server.to(deviceId).emit('notification', notification);
+      this.logger.log(`Notification sent to device room: ${deviceId}`);
     }
   }
 }
