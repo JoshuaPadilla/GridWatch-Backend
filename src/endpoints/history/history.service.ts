@@ -14,13 +14,22 @@ export class HistoryService {
 
   async create(createHistoryDto: CreateHistoryDto) {
     const newHistory = new this.historyModel(createHistoryDto);
+    console.log('service', newHistory);
 
     await newHistory.save();
+  }
+
+  async findAll() {
+    return await this.historyModel.find().sort({ createdAt: -1 });
   }
 
   async getHistoryByDevice(deviceId: string) {
     const histories = await this.historyModel.find({ deviceId });
 
     return histories;
+  }
+
+  async delete() {
+    return this.historyModel.deleteMany();
   }
 }

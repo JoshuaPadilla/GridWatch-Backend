@@ -1,27 +1,24 @@
 import {
+  IsEnum,
   IsNotEmpty,
   IsNotEmptyObject,
   IsObject,
   IsOptional,
   IsString,
 } from 'class-validator';
+import { HISTORY_STATUS } from 'src/enums/history_status.enum';
 
 export class CreateHistoryDto {
   @IsString()
   deviceId: string;
 
   @IsString()
-  time: string;
-
-  @IsString()
-  date: string;
-
-  @IsString()
   title: string;
 
   @IsString()
-  body: string;
+  @IsEnum(HISTORY_STATUS)
+  status: HISTORY_STATUS;
 
   @IsString()
-  status: string;
+  body: string;
 }

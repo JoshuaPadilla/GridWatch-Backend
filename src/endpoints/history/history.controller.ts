@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
 import { HistoryService } from './history.service';
 import { CreateHistoryDto } from './dto/create-history.dto';
 
@@ -11,8 +11,18 @@ export class HistoryController {
     return await this.historyService.create(createHistoryDto);
   }
 
+  @Get()
+  async findAll() {
+    return this.historyService.findAll();
+  }
+
   @Get(':deviceId')
   async getHistoryByDevice(@Param('deviceId') deviceId: string) {
     return this.historyService.getHistoryByDevice(deviceId);
+  }
+
+  @Delete()
+  async delete() {
+    await this.historyService.delete();
   }
 }
