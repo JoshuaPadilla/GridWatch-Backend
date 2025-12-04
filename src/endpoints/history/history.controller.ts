@@ -1,6 +1,15 @@
-import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Query,
+} from '@nestjs/common';
 import { HistoryService } from './history.service';
 import { CreateHistoryDto } from './dto/create-history.dto';
+import { filter } from 'rxjs';
 
 @Controller('history')
 export class HistoryController {
@@ -12,8 +21,8 @@ export class HistoryController {
   }
 
   @Get()
-  async findAll() {
-    return this.historyService.findAll();
+  async findAll(@Query() query: { filter: string }) {
+    return this.historyService.findAll(query.filter);
   }
 
   @Get(':deviceId')
