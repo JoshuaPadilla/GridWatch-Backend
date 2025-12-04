@@ -1,9 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Device } from './schema/device.schema';
 import { Model } from 'mongoose';
 import { CreateDeviceDto } from './dto/create_device.dto';
 import { LocationService } from '../location/location.service';
+import { UpdateDeviceDto } from './dto/update_device.dto';
 
 @Injectable()
 export class DeviceService {
@@ -39,6 +40,17 @@ export class DeviceService {
 
   async findOne(deviceId: string) {
     return await this.DeviceModel.findOne({ deviceId });
+  }
+
+  async updateDevice(deviceId: string, payload: UpdateDeviceDto) {
+    const device = await this.DeviceModel.findOne({ deviceId });
+
+    if (!device) {
+      throw new NotFoundException();
+    }
+    return this.DeviceModel.findByIdAndUpdate(device._id, payload, {
+      new: true,
+    });
   }
 
   async deleteAll() {

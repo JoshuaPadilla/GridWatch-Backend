@@ -1,6 +1,15 @@
-import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+} from '@nestjs/common';
 import { DeviceService } from './device.service';
 import { CreateDeviceDto } from './dto/create_device.dto';
+import { UpdateDeviceDto } from './dto/update_device.dto';
 
 @Controller('device')
 export class DeviceController {
@@ -19,6 +28,15 @@ export class DeviceController {
   @Get()
   findAll() {
     return this.deviceService.findAll();
+  }
+
+  @Patch(':deviceId')
+  update(
+    @Param('deviceId') deviceId: string,
+    @Body() payload: UpdateDeviceDto,
+  ) {
+    console.log(deviceId);
+    return this.deviceService.updateDevice(deviceId, payload);
   }
 
   @Delete()
