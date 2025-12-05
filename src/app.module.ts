@@ -8,6 +8,7 @@ import { SensorModule } from './endpoints/sensor/sensor.module';
 import { HistoryModule } from './endpoints/history/history.module';
 import { DeviceModule } from './endpoints/device/device.module';
 import { NotificationModule } from './endpoints/notification/notification.module';
+import { InsightsModule } from './endpoints/insights/insights.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { NotificationModule } from './endpoints/notification/notification.module
       }),
       inject: [ConfigService],
     }),
+    InsightsModule,
     SensorModule,
     HistoryModule,
     DeviceModule,
