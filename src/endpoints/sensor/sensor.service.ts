@@ -74,7 +74,12 @@ export class SensorService {
     if (newDevice) {
       const res = await firstValueFrom(this.httpService.post('', payloadDto));
 
-      console.log(res.data);
+      if (res.status === 200) {
+        this.eventsGateway.sendDevicePrediction(
+          payloadDto.deviceId,
+          res.data.risk_score,
+        );
+      }
 
       // check for voltage or current to send notification
       this.checkPayloadThreshold(newDevice, payloadDto);
@@ -97,7 +102,8 @@ export class SensorService {
     const newPayload = new this.sensorPayloadModel(payloadDto);
 
     const saved = await newPayload.save();
-
+    const cleanPayload = saved.toJSON();
+    this.eventsGateway.sendPayloadToDevice(payloadDto.deviceId, cleanPayload);
     return saved;
 
     // const date = new Date(saved.createdAt);
@@ -128,7 +134,7 @@ export class SensorService {
   async getLast20DevicePayloads(deviceId: string) {
     const results = await this.sensorPayloadModel
       .find({ deviceId })
-      .sort({ createdAt: -1 })
+      .sort({ updatedAt: -1 })
       .limit(20)
       .exec();
 
@@ -197,6 +203,13 @@ export class SensorService {
 
       this.notificationService.create(notification);
       this.changeDeviceStatus(device, DEVICE_STATUS.FLUCTUATING);
+    }
+
+    if (
+      voltage > WARNING_VOLTAGE_LOWER_LIMIT &&
+      current < WARNING_CURRENT_UPPER_LIMIT
+    ) {
+      this.changeDeviceStatus(device, DEVICE_STATUS.STABLE);
     }
   }
 

@@ -89,7 +89,15 @@ export class EventsGateway
   }
 
   changeDeviceStatus(deviceId: string, status: DEVICE_STATUS) {
+    console.log(status);
     this.server.emit('changeDeviceStatus', { deviceId, status });
-    console.log('device status sent');
+  }
+
+  sendDevicePrediction(deviceId: string, riskScore: number) {
+    console.log('Sending prediction');
+    if (this.server) {
+      this.server.to(deviceId).emit('prediction', { deviceId, riskScore });
+      this.logger.log(`Prediction sent to device room: ${deviceId}`);
+    }
   }
 }

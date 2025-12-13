@@ -11,7 +11,7 @@ export class SensorPayload extends Document {
   voltage: number;
 
   @Prop({})
-  createdAt: string;
+  createdAt: Date;
 
   @Prop()
   current: number;
