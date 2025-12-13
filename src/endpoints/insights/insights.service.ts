@@ -38,4 +38,38 @@ export class InsightsService {
 
     return { stableDevices, totalDevices, totalRestored, outagesReported };
   }
+
+  async getOutagesFrequency() {
+    const dailyOutages = await this.historyModel
+      .aggregate([
+        // 1. $match: Filter for only 'OUTAGE' status records.
+        {
+          $match: {
+            status: HISTORY_STATUS.OUTAGE,
+          },
+        },
+        // 2. $group: Group the documents by the day they were created and count them.
+        {
+          $group: {
+            // Use an ID that extracts the year, month, and day from the 'createdAt' field
+            _id: {
+              $dateToString: { format: '%b %d', date: '$createdAt' },
+            },
+            // Count the documents in the group
+            count: { $sum: 1 },
+          },
+        },
+        // 3. $sort: Order the results chronologically by date (oldest first).
+        {
+          $sort: { _id: 1 },
+        },
+      ])
+      .exec();
+
+    // 4. Transform the result for a cleaner output format
+    return dailyOutages.map((item) => ({
+      date: item._id, // The date string (e.g., "2025-12-01")
+      count: item.count, // The total number of outages on that day
+    }));
+  }
 }

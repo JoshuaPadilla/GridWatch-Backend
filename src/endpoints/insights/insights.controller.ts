@@ -9,4 +9,9 @@ export class InsightsController {
   getInsightsNumbers() {
     return this.insightsService.getInsightsNumbers();
   }
+
+  @Get('/outages_frequency')
+  getOutagesFrequency() {
+    return this.insightsService.getOutagesFrequency();
+  }
 }

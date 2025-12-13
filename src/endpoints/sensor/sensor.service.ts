@@ -23,6 +23,9 @@ import {
   WARNING_CURRENT_UPPER_LIMIT,
 } from 'src/constants/current_threshold.constant';
 import { CreateNotificationDto } from '../notification/dto/create-notification.dto';
+import { HttpService } from '@nestjs/axios';
+import { firstValueFrom } from 'rxjs';
+import { DEVICE_STATUS } from 'src/enums/device_status.enums';
 
 @Injectable()
 export class SensorService {
@@ -34,6 +37,7 @@ export class SensorService {
     private readonly eventsGateway: EventsGateway,
     private readonly locationService: LocationService,
     private readonly notificationService: NotificationService,
+    private readonly httpService: HttpService,
   ) {}
 
   // async create(deviceId: string) {
@@ -68,6 +72,11 @@ export class SensorService {
     const newDevice = await this.isNew(payloadDto.deviceId);
 
     if (newDevice) {
+      const res = await firstValueFrom(this.httpService.post('', payloadDto));
+
+      console.log(res.data);
+
+      // check for voltage or current to send notification
       this.checkPayloadThreshold(newDevice, payloadDto);
     }
 
@@ -88,9 +97,6 @@ export class SensorService {
     const newPayload = new this.sensorPayloadModel(payloadDto);
 
     const saved = await newPayload.save();
-
-    const cleanPayload = saved.toJSON();
-    this.eventsGateway.sendPayloadToDevice(payloadDto.deviceId, cleanPayload);
 
     return saved;
 
@@ -154,7 +160,7 @@ export class SensorService {
     await this.sensorPayloadModel.deleteMany();
   }
 
-  private checkPayloadThreshold(
+  private async checkPayloadThreshold(
     device: Device,
     payload: CreateSensorPayloadDto,
   ) {
@@ -166,13 +172,14 @@ export class SensorService {
 
       this.eventsGateway.sendNotificationToDevice(deviceId, notification);
 
-      this.notificationService.create(notification);
+      this.changeDeviceStatus(device, DEVICE_STATUS.LOW);
     } else if (voltage <= WARNING_VOLTAGE_LOWER_LIMIT) {
       notification = getWarningVoltageNotif(device, voltage);
 
       this.eventsGateway.sendNotificationToDevice(deviceId, notification);
 
       this.notificationService.create(notification);
+      this.changeDeviceStatus(device, DEVICE_STATUS.FLUCTUATING);
     }
 
     if (current >= CRITICAL_CURRENT_UPPER_LIMIT) {
@@ -181,12 +188,21 @@ export class SensorService {
       this.eventsGateway.sendNotificationToDevice(deviceId, notification);
 
       this.notificationService.create(notification);
+
+      this.changeDeviceStatus(device, DEVICE_STATUS.CURRENT_OVERLOAD);
     } else if (current >= WARNING_CURRENT_UPPER_LIMIT) {
       notification = getWarningCurrentNotfi(device, current);
 
       this.eventsGateway.sendNotificationToDevice(deviceId, notification);
 
       this.notificationService.create(notification);
+      this.changeDeviceStatus(device, DEVICE_STATUS.FLUCTUATING);
     }
+  }
+
+  private async changeDeviceStatus(device: Device, status: DEVICE_STATUS) {
+    await this.DeviceModel.findByIdAndUpdate(device._id, { status: status });
+
+    this.eventsGateway.changeDeviceStatus(device.deviceId, status);
   }
 }

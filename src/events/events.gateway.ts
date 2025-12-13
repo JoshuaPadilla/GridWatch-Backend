@@ -11,6 +11,7 @@ import {
 import { Logger } from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
 import { CreateNotificationDto } from 'src/endpoints/notification/dto/create-notification.dto';
+import { DEVICE_STATUS } from 'src/enums/device_status.enums';
 
 @WebSocketGateway({
   cors: {
@@ -85,5 +86,10 @@ export class EventsGateway
       this.server.to(deviceId).emit('notification', notification);
       this.logger.log(`Notification sent to device room: ${deviceId}`);
     }
+  }
+
+  changeDeviceStatus(deviceId: string, status: DEVICE_STATUS) {
+    this.server.emit('changeDeviceStatus', { deviceId, status });
+    console.log('device status sent');
   }
 }
