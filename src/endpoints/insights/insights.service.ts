@@ -6,6 +6,11 @@ import { Device } from '../device/schema/device.schema';
 import { SensorPayload } from '../sensor/schema/sensor_payload.schema';
 import { HISTORY_STATUS } from 'src/enums/history_status.enum';
 import { DEVICE_STATUS } from 'src/enums/device_status.enums';
+import { HistoryFilter } from 'src/enums/history_filter';
+import {
+  BarChartData,
+  BarChartDataFrequency,
+} from 'src/interfaces/bar_chart_data';
 
 @Injectable()
 export class InsightsService {
@@ -18,62 +23,116 @@ export class InsightsService {
     private sensorPayloadModel: Model<SensorPayload>,
   ) {}
 
-  async getInsightsNumbers() {
-    const devices = await this.deviceModel.find();
-    const histories = await this.historyModel.find();
+  async getInsightsNumbers(filter: 'week' | 'month' | 'all') {
+    // 1. Calculate the start date based on the filter
+    const now = new Date();
+    let startDate: Date | null = null;
 
-    const stableDevices = devices.filter(
-      (item) => item.status === DEVICE_STATUS.STABLE,
-    ).length;
+    if (filter === 'week') {
+      startDate = new Date();
+      startDate.setDate(now.getDate() - 7);
+    } else if (filter === 'month') {
+      startDate = new Date();
+      startDate.setMonth(now.getMonth() - 1);
+    }
 
-    const totalDevices = devices.length;
+    // 2. Prepare the History Filter (Activity logs)
+    const historyFilter: any = {};
+    if (startDate) {
+      historyFilter.createdAt = { $gte: startDate };
+    }
 
-    const outagesReported = histories.filter(
-      (item) => item.status === HISTORY_STATUS.OUTAGE,
-    ).length;
+    // 3. Execute queries in parallel
+    const [stableDevices, totalDevices, outagesReported, totalRestored] =
+      await Promise.all([
+        // A. Device Inventory (Usually we want the Current Total, not filtered by date)
+        this.deviceModel.countDocuments({ status: DEVICE_STATUS.STABLE }),
+        this.deviceModel.countDocuments({}),
 
-    const totalRestored = histories.filter(
-      (item) => item.status === HISTORY_STATUS.RESTORED,
-    ).length;
+        // B. History Events (Filtered by the selected time range)
+        this.historyModel.countDocuments({
+          ...historyFilter, // Applies the date filter here
+          status: HISTORY_STATUS.OUTAGE,
+        }),
+        this.historyModel.countDocuments({
+          ...historyFilter, // Applies the date filter here
+          status: HISTORY_STATUS.RESTORED,
+        }),
+      ]);
 
-    return { stableDevices, totalDevices, totalRestored, outagesReported };
+    return {
+      stableDevices,
+      totalDevices,
+      totalRestored,
+      outagesReported,
+    };
   }
 
-  async getOutagesFrequency() {
+  async getOutagesFrequency(filter: 'week' | 'month' | 'all') {
+    // 1. Calculate the start date based on the filter
+    const now = new Date();
+    let startDate: Date | null = null;
+
+    if (filter === 'week') {
+      startDate = new Date();
+      startDate.setDate(now.getDate() - 7); // Last 7 days
+    } else if (filter === 'month') {
+      startDate = new Date();
+      startDate.setMonth(now.getMonth() - 1); // Last 30 days/1 month
+    }
+    // If 'all', startDate remains null
+
+    // 2. Build the Match Query
+    const matchQuery: any = {
+      status: HISTORY_STATUS.OUTAGE,
+    };
+
+    // Only add the date filter if it's not 'all'
+    if (startDate) {
+      matchQuery.createdAt = { $gte: startDate };
+    }
+
     const dailyOutages = await this.historyModel
       .aggregate([
-        // 1. $match: Filter for only 'OUTAGE' status records.
+        // Stage 1: Filter by Status, Device, and Date Range
         {
-          $match: {
-            status: HISTORY_STATUS.OUTAGE,
-          },
+          $match: matchQuery,
         },
-        // 2. $group: Group the documents by the day they were created and count them.
+        // Stage 2: Group by a SORTABLE date format (YYYY-MM-DD)
         {
           $group: {
-            // Use an ID that extracts the year, month, and day from the 'createdAt' field
             _id: {
-              $dateToString: { format: '%b %d', date: '$createdAt' },
+              $dateToString: { format: '%Y-%m-%d', date: '$createdAt' },
             },
-            // Count the documents in the group
             count: { $sum: 1 },
+            // Keep a reference to the actual date for formatting later if needed
+            dateObj: { $first: '$createdAt' },
           },
         },
-        // 3. $sort: Order the results chronologically by date (oldest first).
+        // Stage 3: Sort chronologically
         {
           $sort: { _id: 1 },
+        },
+        // Stage 4: Reformat to your desired output ("Dec 01")
+        {
+          $project: {
+            _id: 0, // Remove the default _id
+            date: {
+              $dateToString: { format: '%b %d', date: '$dateObj' },
+            },
+            count: 1,
+          },
         },
       ])
       .exec();
 
-    // 4. Transform the result for a cleaner output format
-    return dailyOutages.map((item) => ({
-      date: item._id, // The date string (e.g., "2025-12-01")
-      count: item.count, // The total number of outages on that day
-    }));
+    return dailyOutages;
   }
 
-  async getOutageBarChartData(filter: 'week' | 'month' | 'all') {
+  async getOutageBarChartData(
+    deviceId: string, // <--- 1. Added deviceId parameter
+    filter: 'week' | 'month' | 'all',
+  ): Promise<BarChartData> {
     const today = new Date();
     let matchDate: Date;
     let dateFormat: string;
@@ -84,14 +143,20 @@ export class InsightsService {
       dateFormat = '%b'; // "Jan"
     } else {
       matchDate = new Date(today);
-      matchDate.setDate(today.getDate() - 6); // Go back 6 days (Today + 6 prev days = 7 days)
-      matchDate.setHours(0, 0, 0, 0); // Start of that day
+      matchDate.setDate(today.getDate() - 6); // Go back 6 days
+      matchDate.setHours(0, 0, 0, 0);
       dateFormat = '%d-%b'; // "13-Dec"
     }
 
     // 2. Fetch Data from DB
     const results = await this.historyModel.aggregate([
-      { $match: { createdAt: { $gte: matchDate } } },
+      {
+        $match: {
+          deviceId: deviceId, // <--- 2. Filter by deviceId here
+          // If your schema uses ObjectId for deviceId, use: deviceId: new Types.ObjectId(deviceId)
+          createdAt: { $gte: matchDate },
+        },
+      },
       {
         $project: {
           status: 1,
@@ -119,16 +184,22 @@ export class InsightsService {
       },
     ]);
 
-    // 3. Fill Missing Dates (0 counts)
+    // 3. Process Data
     return this.fillMissingDates(results, filter);
   }
 
-  // Helper to fill gaps
-  private fillMissingDates(data: any[], filter: 'week' | 'all' | 'month') {
+  private fillMissingDates(
+    data: any[],
+    filter: 'week' | 'all' | 'month',
+  ): BarChartData {
     let expectedLabels: string[] = [];
 
+    // Initialize Totals
+    let totalRestored = 0;
+    let totalOutage = 0;
+
+    // A. Generate Labels
     if (filter === 'all') {
-      // Static list of months
       expectedLabels = [
         'Jan',
         'Feb',
@@ -144,26 +215,54 @@ export class InsightsService {
         'Dec',
       ];
     } else {
-      // Dynamic list of past 7 days
-      expectedLabels = [];
       const d = new Date();
-      // Loop 6 times backwards from today
       for (let i = 6; i >= 0; i--) {
         const tempDate = new Date();
         tempDate.setDate(d.getDate() - i);
-
-        // Manual formatting to match Mongo's %d-%b (e.g., "13-Dec")
         const day = tempDate.getDate().toString().padStart(2, '0');
         const month = tempDate.toLocaleString('default', { month: 'short' });
         expectedLabels.push(`${day}-${month}`);
       }
     }
 
-    // Merge logic
-    return expectedLabels.map((label) => {
+    // B. Build Chart Data and Accumulate Totals
+    const chartData: BarChartDataFrequency[] = expectedLabels.map((label) => {
       const found = data.find((d) => d.name === label);
-      // Return found data OR default 0s
-      return found || { name: label, restored: 0 };
+
+      const restored = found?.restored || 0;
+      const outage = found?.outage || 0;
+
+      // Add to global totals
+      totalRestored += restored;
+      totalOutage += outage;
+
+      return {
+        name: label,
+        restored,
+        outage,
+      };
     });
+
+    // C. Calculate Relative Values
+    const totalEvents = totalRestored + totalOutage;
+
+    const relativeRestoredValue =
+      totalEvents > 0
+        ? parseFloat(((totalRestored / totalEvents) * 100).toFixed(2))
+        : 0;
+
+    const relativeOutageValue =
+      totalEvents > 0
+        ? parseFloat(((totalOutage / totalEvents) * 100).toFixed(2))
+        : 0;
+
+    // D. Return Final Shape
+    return {
+      data: chartData,
+      relativeRestoredValue,
+      relativeOutageValue,
+      totalRestored,
+      totalOutage,
+    };
   }
 }
