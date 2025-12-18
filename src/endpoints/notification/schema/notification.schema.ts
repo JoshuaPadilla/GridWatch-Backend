@@ -14,11 +14,16 @@ export class Notification extends Document {
   @Prop({ required: true })
   body: string;
 
+  @Prop({ default: false, required: false })
+  read: boolean;
+
+  @Prop({ default: 0, required: false })
+  outagePercentage: number;
+
   @Prop({ type: String, enum: Object.values(NOTIFICATION_STATUS) })
   status: NOTIFICATION_STATUS;
 
-  @Prop()
-  createdAt: string;
+  createdAt: Date;
 }
 
 export const NotificationSchema = SchemaFactory.createForClass(Notification);

@@ -12,6 +12,7 @@ import { Logger } from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
 import { CreateNotificationDto } from 'src/endpoints/notification/dto/create-notification.dto';
 import { DEVICE_STATUS } from 'src/enums/device_status.enums';
+import { Notification } from 'src/endpoints/notification/schema/notification.schema';
 
 @WebSocketGateway({
   cors: {
@@ -44,7 +45,6 @@ export class EventsGateway
     @MessageBody() data: { deviceId: string },
   ) {
     if (!data.deviceId) return; // Add validation
-
     client.join(data.deviceId);
     this.logger.log(`Client ${client.id} joined room ${data.deviceId}`);
   }
@@ -78,10 +78,7 @@ export class EventsGateway
     }
   }
 
-  sendNotificationToDevice(
-    deviceId: string,
-    notification: CreateNotificationDto,
-  ) {
+  sendNotificationToDevice(deviceId: string, notification: Notification) {
     if (this.server) {
       this.server.to(deviceId).emit('notification', notification);
       this.logger.log(`Notification sent to device room: ${deviceId}`);
@@ -89,12 +86,11 @@ export class EventsGateway
   }
 
   changeDeviceStatus(deviceId: string, status: DEVICE_STATUS) {
-    console.log(status);
     this.server.emit('changeDeviceStatus', { deviceId, status });
   }
 
   sendDevicePrediction(deviceId: string, riskScore: number) {
-    console.log('Sending prediction');
+    console.log('Sending Prediction');
     if (this.server) {
       this.server.to(deviceId).emit('prediction', { deviceId, riskScore });
       this.logger.log(`Prediction sent to device room: ${deviceId}`);

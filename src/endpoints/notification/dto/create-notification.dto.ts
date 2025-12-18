@@ -1,7 +1,9 @@
 import {
+  IsDate,
   IsEnum,
   IsNotEmpty,
   IsNotEmptyObject,
+  IsNumber,
   IsObject,
   IsOptional,
   IsString,
@@ -21,4 +23,7 @@ export class CreateNotificationDto {
   @IsString()
   @IsEnum(NOTIFICATION_STATUS)
   status: NOTIFICATION_STATUS;
+
+  @IsNumber()
+  outagePercentage: number;
 }

@@ -74,7 +74,10 @@ export class SensorService {
     if (newDevice) {
       const res = await firstValueFrom(this.httpService.post('', payloadDto));
 
+      let riskScore = 0;
+
       if (res.status === 200) {
+        riskScore = res.data.risk_score;
         this.eventsGateway.sendDevicePrediction(
           payloadDto.deviceId,
           res.data.risk_score,
@@ -82,7 +85,7 @@ export class SensorService {
       }
 
       // check for voltage or current to send notification
-      this.checkPayloadThreshold(newDevice, payloadDto);
+      this.checkPayloadThreshold(newDevice, payloadDto, riskScore);
     }
 
     if (!newDevice) {
@@ -169,39 +172,74 @@ export class SensorService {
   private async checkPayloadThreshold(
     device: Device,
     payload: CreateSensorPayloadDto,
+    riskScore: number,
   ) {
-    let notification: CreateNotificationDto | undefined = undefined;
+    let notificationFromPayload: CreateNotificationDto | undefined = undefined;
     const { voltage, current, deviceId } = payload;
 
-    if (voltage <= CRITICAL_VOLTAGE_LOWER_LIMIT) {
-      notification = getCriticalVoltageNotif(device, voltage);
+    if (voltage === 0) {
+      this.changeDeviceStatus(device, DEVICE_STATUS.NO_POWER);
 
-      this.eventsGateway.sendNotificationToDevice(deviceId, notification);
+      return;
+    }
+
+    if (voltage <= CRITICAL_VOLTAGE_LOWER_LIMIT) {
+      notificationFromPayload = getCriticalVoltageNotif(
+        device,
+        voltage,
+        riskScore,
+      );
+
+      const savedNotif = await this.notificationService.create(
+        notificationFromPayload,
+      );
+
+      this.eventsGateway.sendNotificationToDevice(deviceId, savedNotif);
 
       this.changeDeviceStatus(device, DEVICE_STATUS.LOW);
     } else if (voltage <= WARNING_VOLTAGE_LOWER_LIMIT) {
-      notification = getWarningVoltageNotif(device, voltage);
+      notificationFromPayload = getWarningVoltageNotif(
+        device,
+        voltage,
+        riskScore,
+      );
 
-      this.eventsGateway.sendNotificationToDevice(deviceId, notification);
+      const savedNotif = await this.notificationService.create(
+        notificationFromPayload,
+      );
 
-      this.notificationService.create(notification);
+      this.eventsGateway.sendNotificationToDevice(deviceId, savedNotif);
+
       this.changeDeviceStatus(device, DEVICE_STATUS.FLUCTUATING);
     }
 
     if (current >= CRITICAL_CURRENT_UPPER_LIMIT) {
-      notification = getCriticalCurrentNotif(device, current);
+      notificationFromPayload = getCriticalCurrentNotif(
+        device,
+        current,
+        riskScore,
+      );
 
-      this.eventsGateway.sendNotificationToDevice(deviceId, notification);
+      const savedNotif = await this.notificationService.create(
+        notificationFromPayload,
+      );
 
-      this.notificationService.create(notification);
+      this.eventsGateway.sendNotificationToDevice(deviceId, savedNotif);
 
       this.changeDeviceStatus(device, DEVICE_STATUS.CURRENT_OVERLOAD);
     } else if (current >= WARNING_CURRENT_UPPER_LIMIT) {
-      notification = getWarningCurrentNotfi(device, current);
+      notificationFromPayload = getWarningCurrentNotfi(
+        device,
+        current,
+        riskScore,
+      );
 
-      this.eventsGateway.sendNotificationToDevice(deviceId, notification);
+      const savedNotif = await this.notificationService.create(
+        notificationFromPayload,
+      );
 
-      this.notificationService.create(notification);
+      this.eventsGateway.sendNotificationToDevice(deviceId, savedNotif);
+
       this.changeDeviceStatus(device, DEVICE_STATUS.FLUCTUATING);
     }
 

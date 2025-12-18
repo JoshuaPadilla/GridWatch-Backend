@@ -20,7 +20,8 @@ export class History extends Document {
   })
   status: HISTORY_STATUS;
 
-  timestamps: string;
+  timestamps: Date;
+  createdAt: Date;
 }
 
 export const HistorySchema = SchemaFactory.createForClass(History);

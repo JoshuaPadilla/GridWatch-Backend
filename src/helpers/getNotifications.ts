@@ -17,47 +17,55 @@ import { NOTIFICATION_STATUS } from 'src/enums/notification_status.enum';
 export const getCriticalVoltageNotif = (
   device: Device,
   voltage: number,
+  riskScore: number,
 ): CreateNotificationDto => {
   return {
     deviceId: device.deviceId,
     title: 'Extremely Low Voltage Alert',
     body: `Critical: Voltage (${voltage}V) level is extremely low (<= ${CRITICAL_VOLTAGE_LOWER_LIMIT}V). It is possible to experience power interruption in ${device.locationName.road}, ${device.locationName.brgy}.`,
     status: NOTIFICATION_STATUS.CRITICAL,
+    outagePercentage: riskScore,
   };
 };
 
 export const getWarningVoltageNotif = (
   device: Device,
   voltage: number,
+  riskScore: number,
 ): CreateNotificationDto => {
   return {
     deviceId: device.deviceId,
     title: 'Low Voltage Alert',
     body: `Warning: Voltage (${voltage}V) level is significantly low (<= ${WARNING_VOLTAGE_LOWER_LIMIT}V). High risk of power instability/sag in ${device.locationName.road}, ${device.locationName.brgy}.`,
     status: NOTIFICATION_STATUS.WARNING,
+    outagePercentage: riskScore,
   };
 };
 
 export const getWarningCurrentNotfi = (
   device: Device,
   current: number,
+  riskScore: number,
 ): CreateNotificationDto => {
   return {
     deviceId: device.deviceId,
     title: 'High Current Alert',
     body: `Warning: Current (${current}A) is high (>= ${WARNING_CURRENT_UPPER_LIMIT}A). Monitor for potential overload stress. On grid located on ${device.locationName.road}, ${device.locationName.brgy}.`,
     status: NOTIFICATION_STATUS.WARNING,
+    outagePercentage: riskScore,
   };
 };
 
 export const getCriticalCurrentNotif = (
   device: Device,
   current: number,
+  riskScore: number,
 ): CreateNotificationDto => {
   return {
     deviceId: device.deviceId,
     title: 'High Current Alert',
     body: `Warning: Current (${current}A) is dangerously high (>= ${CRITICAL_CURRENT_UPPER_LIMIT}A). Potential device overload leading to blackout on grid located on ${device.locationName.road}, ${device.locationName.brgy}.`,
     status: NOTIFICATION_STATUS.WARNING,
+    outagePercentage: riskScore,
   };
 };

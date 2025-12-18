@@ -18,11 +18,28 @@ export class NotificationService {
   }
 
   async getNotifByDeviceId(deviceId: string) {
-    console.log('gett');
-    return await this.NotificationModel.find({ deviceId });
+    return await this.NotificationModel.find({ deviceId }).sort({
+      createdAt: -1,
+    });
   }
 
   async deleteAll() {
     await this.NotificationModel.deleteMany();
+  }
+
+  async getUnreadNotifCount(deviceId: string) {
+    const count = await this.NotificationModel.countDocuments({
+      deviceId: deviceId,
+      read: false,
+    });
+
+    return count;
+  }
+
+  async markedAsRead(notifId: string) {
+    await this.NotificationModel.updateOne(
+      { _id: notifId },
+      { $set: { read: true } },
+    );
   }
 }
