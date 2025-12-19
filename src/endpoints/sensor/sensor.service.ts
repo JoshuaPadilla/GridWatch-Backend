@@ -26,6 +26,7 @@ import { CreateNotificationDto } from '../notification/dto/create-notification.d
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 import { DEVICE_STATUS } from 'src/enums/device_status.enums';
+import { LocationCoordinates } from 'src/interfaces/location_coor.interface';
 
 @Injectable()
 export class SensorService {
@@ -72,6 +73,25 @@ export class SensorService {
     const newDevice = await this.isNew(payloadDto.deviceId);
 
     if (newDevice) {
+      const isSameCoor = this.compareCoordinates(
+        payloadDto.locationCoordinates,
+        newDevice.locationCoordinates,
+      );
+
+      if (!isSameCoor) {
+        const location_name = await this.locationService.getLocationName(
+          payloadDto.locationCoordinates,
+        );
+
+        await this.DeviceModel.findOneAndUpdate(
+          { deviceId: payloadDto.deviceId },
+          {
+            locationCoordinates: payloadDto.locationCoordinates,
+            locationName: location_name,
+          },
+        );
+      }
+
       const res = await firstValueFrom(this.httpService.post('', payloadDto));
 
       let riskScore = 0;
@@ -255,5 +275,20 @@ export class SensorService {
     await this.DeviceModel.findByIdAndUpdate(device._id, { status: status });
 
     this.eventsGateway.changeDeviceStatus(device.deviceId, status);
+  }
+
+  private compareCoordinates(
+    coor1?: LocationCoordinates,
+    coor2?: LocationCoordinates,
+  ): boolean {
+    if (!coor1 || !coor2) {
+      return false;
+    }
+
+    const lat1 = Number(coor1.lat);
+    const lat2 = Number(coor2.lat);
+    const lng1 = Number(coor1.lng);
+    const lng2 = Number(coor2.lng);
+    return lat1 === lat2 && lng1 === lng2;
   }
 }

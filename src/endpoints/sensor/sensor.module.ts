@@ -16,7 +16,7 @@ import { HttpModule } from '@nestjs/axios';
 @Module({
   imports: [
     HttpModule.register({
-      baseURL: 'http://127.0.0.1:3001/predict_outage',
+      baseURL: 'http://localhost:3001/predict_outage',
       timeout: 3000,
     }),
     NotificationModule,
