@@ -67,12 +67,16 @@ export class SensorService {
   //   }
   // }
 
+  // async testLocation(locatiocoor: LocationCoordinates) {
+  //   return this.locationService.getLocationName(locatiocoor);
+  // }
+
   async create(
     payloadDto: CreateSensorPayloadDto,
   ): Promise<SensorPayload | undefined> {
     const newDevice = await this.isNew(payloadDto.deviceId);
 
-    if (newDevice) {
+    if (newDevice && payloadDto.locationCoordinates) {
       const isSameCoor = this.compareCoordinates(
         payloadDto.locationCoordinates,
         newDevice.locationCoordinates,

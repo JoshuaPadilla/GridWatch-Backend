@@ -6,7 +6,7 @@ import { Device } from '../device/schema/device.schema';
 import { SensorPayload } from '../sensor/schema/sensor_payload.schema';
 import { HISTORY_STATUS } from 'src/enums/history_status.enum';
 import { DEVICE_STATUS } from 'src/enums/device_status.enums';
-import { HistoryFilter } from 'src/enums/history_filter';
+
 import {
   BarChartData,
   BarChartDataFrequency,

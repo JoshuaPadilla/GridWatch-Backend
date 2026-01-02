@@ -5,6 +5,7 @@ import { CreateSensorPayloadDto } from './dto/create-sensor-payload.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { Device } from '../device/schema/device.schema';
 import { Model } from 'mongoose';
+import { LocationCoordinates } from 'src/interfaces/location_coor.interface';
 
 @Controller('sensor')
 export class SensorController {
@@ -22,7 +23,6 @@ export class SensorController {
 
   @Post()
   async create(@Body() sensorPayload: CreateSensorPayloadDto) {
-    console.log(sensorPayload);
     const newPayload = await this.sensorService.create(sensorPayload);
     return newPayload;
   }
@@ -31,7 +31,7 @@ export class SensorController {
   async getAll() {
     return this.sensorService.getAll();
   }
-   @Get(':deviceId')
+  @Get(':deviceId')
   async getLast20DevicePayloads(@Param('deviceId') deviceId: string) {
     return this.sensorService.getLast20DevicePayloads(deviceId);
   }
