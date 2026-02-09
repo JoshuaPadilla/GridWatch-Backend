@@ -76,6 +76,28 @@ export class SensorService {
   ): Promise<SensorPayload | undefined> {
     const newDevice = await this.isNew(payloadDto.deviceId);
 
+    if (newDevice) {
+      const res = await firstValueFrom(
+        this.httpService.post(
+          'http://localhost:3001/predict_outage',
+          payloadDto,
+        ),
+      );
+
+      let riskScore = 0;
+
+      if (res.status === 200) {
+        riskScore = res.data.risk_score;
+        this.eventsGateway.sendDevicePrediction(
+          payloadDto.deviceId,
+          res.data.risk_score,
+        );
+      }
+
+      // check for voltage or current to send notification
+      this.checkPayloadThreshold(newDevice, payloadDto, riskScore);
+    }
+
     if (newDevice && payloadDto.locationCoordinates) {
       const isSameCoor = this.compareCoordinates(
         payloadDto.locationCoordinates,
@@ -95,21 +117,6 @@ export class SensorService {
           },
         );
       }
-
-      const res = await firstValueFrom(this.httpService.post('', payloadDto));
-
-      let riskScore = 0;
-
-      if (res.status === 200) {
-        riskScore = res.data.risk_score;
-        this.eventsGateway.sendDevicePrediction(
-          payloadDto.deviceId,
-          res.data.risk_score,
-        );
-      }
-
-      // check for voltage or current to send notification
-      this.checkPayloadThreshold(newDevice, payloadDto, riskScore);
     }
 
     if (!newDevice) {

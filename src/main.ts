@@ -3,13 +3,14 @@ import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  app.setGlobalPrefix('api/gridwatch/');
 
   app.enableCors({
-    origin: 'http://localhost:5173', // <-- Replace with your frontend URL
+    origin: '*', // Allow any domain
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-    credentials: true, // <-- Allows cookies to be sent (if needed)
+    allowedHeaders: '*', // Allow any headers
   });
 
-  await app.listen(process.env.PORT ?? 3000);
+  await app.listen(process.env.PORT ?? 3001);
 }
 bootstrap();

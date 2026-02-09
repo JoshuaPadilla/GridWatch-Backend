@@ -16,6 +16,8 @@ export class LocationService {
 
     const data = await req.json();
 
+    console.log(data);
+
     const locationName: Partial<LocationName> = {
       road: data.address?.road ?? '',
       brgy: data.address?.quarter ? `Brgy. ${data.address.quarter}` : '',
