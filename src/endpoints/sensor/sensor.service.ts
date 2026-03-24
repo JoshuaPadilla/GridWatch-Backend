@@ -1,32 +1,31 @@
+import { HttpService } from '@nestjs/axios';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { SensorPayload } from './schema/sensor_payload.schema';
 import { Model } from 'mongoose';
-import { CreateSensorPayloadDto } from './dto/create-sensor-payload.dto';
-import { SensorGateway } from 'src/events/sensor.gateway';
-import { Device } from '../device/schema/device.schema';
-import { LocationService } from '../location/location.service';
-import { NotificationService } from '../notification/notification.service';
-import { EventsGateway } from 'src/events/events.gateway';
+import { firstValueFrom } from 'rxjs';
+import {
+  CRITICAL_CURRENT_UPPER_LIMIT,
+  WARNING_CURRENT_UPPER_LIMIT,
+} from 'src/constants/current_threshold.constant';
 import {
   CRITICAL_VOLTAGE_LOWER_LIMIT,
   WARNING_VOLTAGE_LOWER_LIMIT,
 } from 'src/constants/voltage_threshold.constant';
+import { DEVICE_STATUS } from 'src/enums/device_status.enums';
+import { EventsGateway } from 'src/events/events.gateway';
 import {
   getCriticalCurrentNotif,
   getCriticalVoltageNotif,
   getWarningCurrentNotfi,
   getWarningVoltageNotif,
 } from 'src/helpers/getNotifications';
-import {
-  CRITICAL_CURRENT_UPPER_LIMIT,
-  WARNING_CURRENT_UPPER_LIMIT,
-} from 'src/constants/current_threshold.constant';
-import { CreateNotificationDto } from '../notification/dto/create-notification.dto';
-import { HttpService } from '@nestjs/axios';
-import { firstValueFrom } from 'rxjs';
-import { DEVICE_STATUS } from 'src/enums/device_status.enums';
 import { LocationCoordinates } from 'src/interfaces/location_coor.interface';
+import { Device } from '../device/schema/device.schema';
+import { LocationService } from '../location/location.service';
+import { CreateNotificationDto } from '../notification/dto/create-notification.dto';
+import { NotificationService } from '../notification/notification.service';
+import { CreateSensorPayloadDto } from './dto/create-sensor-payload.dto';
+import { SensorPayload } from './schema/sensor_payload.schema';
 
 @Injectable()
 export class SensorService {
@@ -78,10 +77,7 @@ export class SensorService {
 
     if (newDevice) {
       const res = await firstValueFrom(
-        this.httpService.post(
-          'http://localhost:3001/predict_outage',
-          payloadDto,
-        ),
+        this.httpService.post('/predict_outage', payloadDto),
       );
 
       let riskScore = 0;
