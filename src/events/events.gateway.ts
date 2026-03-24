@@ -1,18 +1,17 @@
+import { Logger } from '@nestjs/common';
 import {
-  SubscribeMessage,
-  WebSocketGateway,
-  OnGatewayInit,
-  WebSocketServer,
+  ConnectedSocket,
+  MessageBody,
   OnGatewayConnection,
   OnGatewayDisconnect,
-  MessageBody,
-  ConnectedSocket,
+  OnGatewayInit,
+  SubscribeMessage,
+  WebSocketGateway,
+  WebSocketServer,
 } from '@nestjs/websockets';
-import { Logger } from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
-import { CreateNotificationDto } from 'src/endpoints/notification/dto/create-notification.dto';
-import { DEVICE_STATUS } from 'src/enums/device_status.enums';
 import { Notification } from 'src/endpoints/notification/schema/notification.schema';
+import { DEVICE_STATUS } from 'src/enums/device_status.enums';
 
 @WebSocketGateway({
   cors: {
@@ -31,7 +30,9 @@ export class EventsGateway
   }
 
   handleConnection(client: Socket, ...args: any[]) {
-    this.logger.log(`Client connected: ${client.id}`);
+    this.logger.log(
+      `Client connected: ${client.id} on namespace ${client.nsp.name}`,
+    );
   }
 
   handleDisconnect(client: Socket) {
@@ -44,9 +45,31 @@ export class EventsGateway
     @ConnectedSocket() client: Socket,
     @MessageBody() data: { deviceId: string },
   ) {
-    if (!data.deviceId) return; // Add validation
+    if (!data?.deviceId) {
+      client.emit('joinRoomError', {
+        reason: 'deviceId is required',
+        socketId: client.id,
+      });
+      this.logger.warn(
+        `Client ${client.id} attempted to join without deviceId`,
+      );
+      return;
+    }
+
     client.join(data.deviceId);
-    this.logger.log(`Client ${client.id} joined room ${data.deviceId}`);
+
+    const room = this.server.sockets.adapter.rooms.get(data.deviceId);
+    const roomSize = room?.size ?? 0;
+
+    client.emit('joinedRoom', {
+      deviceId: data.deviceId,
+      socketId: client.id,
+      roomSize,
+    });
+
+    this.logger.log(
+      `Client ${client.id} joined room ${data.deviceId}. Room size: ${roomSize}`,
+    );
   }
 
   @SubscribeMessage('disconnectDevice')
@@ -54,11 +77,31 @@ export class EventsGateway
     @ConnectedSocket() client: Socket,
     @MessageBody() data: { deviceId: string },
   ) {
-    if (!data.deviceId) return;
+    if (!data?.deviceId) {
+      client.emit('leaveRoomError', {
+        reason: 'deviceId is required',
+        socketId: client.id,
+      });
+      this.logger.warn(
+        `Client ${client.id} attempted to leave without deviceId`,
+      );
+      return;
+    }
 
     client.leave(data.deviceId);
-    client.emit('leftRoom', `You have left ${data.deviceId}`);
-    this.logger.log(`Client ${client.id} left room ${data.deviceId}`);
+
+    const room = this.server.sockets.adapter.rooms.get(data.deviceId);
+    const roomSize = room?.size ?? 0;
+
+    client.emit('leftRoom', {
+      deviceId: data.deviceId,
+      socketId: client.id,
+      roomSize,
+    });
+
+    this.logger.log(
+      `Client ${client.id} left room ${data.deviceId}. Room size: ${roomSize}`,
+    );
   }
 
   // --- Public Methods (Call these from Services) ---

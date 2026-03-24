@@ -1,11 +1,9 @@
 import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
-import { SensorService } from './sensor.service';
-import { SensorPayload } from './schema/sensor_payload.schema';
-import { CreateSensorPayloadDto } from './dto/create-sensor-payload.dto';
 import { InjectModel } from '@nestjs/mongoose';
-import { Device } from '../device/schema/device.schema';
 import { Model } from 'mongoose';
-import { LocationCoordinates } from 'src/interfaces/location_coor.interface';
+import { Device } from '../device/schema/device.schema';
+import { CreateSensorPayloadDto } from './dto/create-sensor-payload.dto';
+import { SensorService } from './sensor.service';
 
 @Controller('sensor')
 export class SensorController {
