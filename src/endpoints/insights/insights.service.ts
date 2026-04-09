@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { History } from '../history/schema/history.schema';
 import { Model } from 'mongoose';
-import { Device } from '../device/schema/device.schema';
-import { SensorPayload } from '../sensor/schema/sensor_payload.schema';
-import { HISTORY_STATUS } from 'src/enums/history_status.enum';
 import { DEVICE_STATUS } from 'src/enums/device_status.enums';
+import { HISTORY_STATUS } from 'src/enums/history_status.enum';
+import { Device } from '../device/schema/device.schema';
+import { History } from '../history/schema/history.schema';
+import { SensorPayload } from '../sensor/schema/sensor_payload.schema';
 
 import {
   BarChartData,
@@ -134,28 +134,36 @@ export class InsightsService {
     filter: 'week' | 'month' | 'all',
   ): Promise<BarChartData> {
     const today = new Date();
-    let matchDate: Date;
+    let matchDate: Date | null = null;
     let dateFormat: string;
 
     // 1. Configure Filter
-    if (filter === 'all') {
-      matchDate = new Date(today.getFullYear(), 0, 1); // Jan 1st
-      dateFormat = '%b'; // "Jan"
-    } else {
+    if (filter === 'week') {
       matchDate = new Date(today);
-      matchDate.setDate(today.getDate() - 6); // Go back 6 days
+      matchDate.setDate(today.getDate() - 6); // Last 7 days including today
       matchDate.setHours(0, 0, 0, 0);
       dateFormat = '%d-%b'; // "13-Dec"
+    } else if (filter === 'month') {
+      matchDate = new Date(today);
+      matchDate.setDate(today.getDate() - 29); // Last 30 days including today
+      matchDate.setHours(0, 0, 0, 0);
+      dateFormat = '%d-%b'; // "13-Dec"
+    } else {
+      dateFormat = '%Y-%m'; // "2026-04"
+    }
+
+    const matchQuery: any = {
+      deviceId: deviceId,
+    };
+
+    if (matchDate) {
+      matchQuery.createdAt = { $gte: matchDate };
     }
 
     // 2. Fetch Data from DB
     const results = await this.historyModel.aggregate([
       {
-        $match: {
-          deviceId: deviceId, // <--- 2. Filter by deviceId here
-          // If your schema uses ObjectId for deviceId, use: deviceId: new Types.ObjectId(deviceId)
-          createdAt: { $gte: matchDate },
-        },
+        $match: matchQuery,
       },
       {
         $project: {
@@ -200,23 +208,33 @@ export class InsightsService {
 
     // A. Generate Labels
     if (filter === 'all') {
-      expectedLabels = [
-        'Jan',
-        'Feb',
-        'Mar',
-        'Apr',
-        'May',
-        'Jun',
-        'Jul',
-        'Aug',
-        'Sep',
-        'Oct',
-        'Nov',
-        'Dec',
-      ];
+      const now = new Date();
+      const sortedLabels = data
+        .map((entry) => String(entry.name))
+        .sort((a, b) => a.localeCompare(b));
+
+      const firstLabel =
+        sortedLabels[0] ??
+        `${now.getFullYear()}-${(now.getMonth() + 1)
+          .toString()
+          .padStart(2, '0')}`;
+
+      const [firstYear, firstMonth] = firstLabel.split('-').map(Number);
+      const cursor = new Date(firstYear, firstMonth - 1, 1);
+      const end = new Date(now.getFullYear(), now.getMonth(), 1);
+
+      while (cursor <= end) {
+        expectedLabels.push(
+          `${cursor.getFullYear()}-${(cursor.getMonth() + 1)
+            .toString()
+            .padStart(2, '0')}`,
+        );
+        cursor.setMonth(cursor.getMonth() + 1);
+      }
     } else {
+      const rangeDays = filter === 'month' ? 29 : 6;
       const d = new Date();
-      for (let i = 6; i >= 0; i--) {
+      for (let i = rangeDays; i >= 0; i--) {
         const tempDate = new Date();
         tempDate.setDate(d.getDate() - i);
         const day = tempDate.getDate().toString().padStart(2, '0');
@@ -237,7 +255,7 @@ export class InsightsService {
       totalOutage += outage;
 
       return {
-        name: label,
+        name: filter === 'all' ? this.formatMonthYearLabel(label) : label,
         restored,
         outage,
       };
@@ -264,5 +282,18 @@ export class InsightsService {
       totalRestored,
       totalOutage,
     };
+  }
+
+  private formatMonthYearLabel(label: string): string {
+    const [year, month] = label.split('-').map(Number);
+    if (!year || !month) {
+      return label;
+    }
+
+    const date = new Date(year, month - 1, 1);
+    return date.toLocaleString('default', {
+      month: 'short',
+      year: 'numeric',
+    });
   }
 }
